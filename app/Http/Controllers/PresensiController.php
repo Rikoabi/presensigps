@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 
 class PresensiController extends Controller
@@ -23,7 +25,7 @@ class PresensiController extends Controller
         $email = Auth::guard('karyawan')->user()->email;
         $tgl_presensi = date("Y-m-d");
         $jam = date("H:i:s");
-        
+
         $latitudekantor = -6.237855;
         $longitudekantor = 106.751304;
         $lokasi = $request->lokasi;
@@ -96,5 +98,42 @@ class PresensiController extends Controller
         $kilometers = $miles * 1.609344;
         $meters = $kilometers * 1000;
         return compact('meters');
+    }
+
+    public function editprofile()
+    {
+        $email = Auth::guard('karyawan')->user()->email;
+        $karyawan = DB::table('karyawan')->where('email', $email)->first();
+        return view('presensi.editprofile', compact('karyawan'));
+    }
+
+    public function updateprofile(Request $request)
+    {
+        $email = Auth::guard('karyawan')->user()->email;
+        $nama_lengkap = $request->nama_lengkap;
+        $no_hp = $request->no_hp;
+        $password = Hash::make($request->password);
+
+        if (!empty($password)) {
+            # code...
+            $data = [
+                'nama_lengkap' => $nama_lengkap,
+                'no_hp' => $no_hp,
+                'password' => $password,
+            ];
+        } else {
+            # code...
+            $data = [
+                'nama_lengkap' => $nama_lengkap,
+                'no_hp' => $no_hp,
+                
+            ];
+        }
+        $update = DB::table('karyawan')->where('email',$email)->update($data);
+        if($update){
+            return Redirect::back()->with(['success' => 'Data berhasil di update']);
+        }else{
+            return Redirect::back()>with(['error' => 'Data Gagal']);;
+        }
     }
 }
